@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  mysqldb:
+    image: mysql:8.0
+    container_name: amamente_mysqldb
+    restart: unless-stopped
+    env_file: ./.env
+    environment:
+      - MYSQL_ROOT_PASSWORD=$MYSQLDB_ROOT_PASSWORD
+      - MYSQL_DATABASE=$MYSQLDB_DATABASE
+    ports:
+      - $MYSQLDB_LOCAL_PORT:$MYSQLDB_DOCKER_PORT
+    volumes:
+      - db:/var/lib/mysql
+  app:
+    depends_on:
+      - mysqldb
+    #build: ./../../../amamente-service
+    container_name: amamente_backend
+    image: vitorbraga17/backend-app:latest
+    restart: on-failure
+    env_file: ./.env
+    ports:
+      - $SPRING_LOCAL_PORT:$SPRING_DOCKER_PORT
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysqldb:3306/amamente?autoReconnect=true&useSSL=false
+      FLYWAY_DATASOURCE_URL: jdbc:mysql://mysqldb:3306/
+      SPRING_DOCKER_PORT: $SPRING_DOCKER_PORT
+      SPRING_PROFILE: $SPRING_PROFILE
+      MYSQLDB_USER: $MYSQLDB_USER
+      MYSQLDB_ROOT_PASSWORD: $MYSQLDB_ROOT_PASSWORD
+      MYSQLDB_DATABASE: $MYSQLDB_DATABASE
+volumes:
+   db:
